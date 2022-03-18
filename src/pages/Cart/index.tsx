@@ -4,6 +4,9 @@ import {
   MdAddCircleOutline,
   MdRemoveCircleOutline,
 } from 'react-icons/md';
+import { toast } from 'react-toastify';
+import { useCart } from '../../hooks/useCart';
+import { api } from '../../services/api';
 
 // import { useCart } from '../../hooks/useCart';
 // import { formatPrice } from '../../util/format';
@@ -18,7 +21,7 @@ interface Product {
 }
 
 const Cart = (): JSX.Element => {
-  // const { cart, removeProduct, updateProductAmount } = useCart();
+  const { cart, setCart ,removeProduct, updateProductAmount } = useCart();
 
   // const cartFormatted = cart.map(product => ({
   //   // TODO
@@ -30,16 +33,58 @@ const Cart = (): JSX.Element => {
   //     }, 0)
   //   )
 
-  function handleProductIncrement(product: Product) {
-    // TODO
+  async function handleProductIncrement(product: Product) {
+    const updatedCart = [...cart];
+
+    const incrementingProduct = updatedCart.find(cartItem => cartItem.id === product.id);
+
+    const stock = await api.get(`/stock/${product.id}`);
+
+    const stockAmount = stock.data.amount;
+    const currentAmount = incrementingProduct ? incrementingProduct.amount : 0;
+    const amount = currentAmount + 1;
+
+    if(amount > stockAmount) {
+      toast.error('Quantidade solicitada fora de estoque')
+      return;
+    }
+
+    if(incrementingProduct) {
+      incrementingProduct.amount = amount;
+    }
+
+    setCart(updatedCart);
+    localStorage.setItem('@RocketShoes:cart', JSON.stringify(updatedCart))
   }
 
   function handleProductDecrement(product: Product) {
-    // TODO
+    const updatedCart = [...cart];
+
+    const decrementingProduct = updatedCart.find(cartItem => cartItem.id === product.id);
+
+    const currentAmount = decrementingProduct ? decrementingProduct.amount : 0;
+    const amount = currentAmount - 1;
+
+    if(decrementingProduct) {
+      decrementingProduct.amount = amount
+    }
+
+    setCart(updatedCart);
+    localStorage.setItem('@RocketShoes:cart', JSON.stringify(updatedCart))
+
   }
 
   function handleRemoveProduct(productId: number) {
-    // TODO
+    const updatedCart = [...cart];
+
+    const newCart: any = updatedCart.map(cartItem => {
+      if(cartItem.id !== productId) {
+        return cartItem
+      }
+    })
+
+    setCart(newCart);
+    localStorage.setItem('@RocketShoes:cart', JSON.stringify(newCart));
   }
 
   return (
@@ -55,52 +100,54 @@ const Cart = (): JSX.Element => {
           </tr>
         </thead>
         <tbody>
-          <tr data-testid="product">
-            <td>
-              <img src="https://rocketseat-cdn.s3-sa-east-1.amazonaws.com/modulo-redux/tenis1.jpg" alt="Tênis de Caminhada Leve Confortável" />
-            </td>
-            <td>
-              <strong>Tênis de Caminhada Leve Confortável</strong>
-              <span>R$ 179,90</span>
-            </td>
-            <td>
-              <div>
+          {cart.map(cartItem => (
+            <tr key={cartItem.id} data-testid="product">
+              <td>
+                <img src={cartItem.image} alt="Tênis de Caminhada Leve Confortável" />
+              </td>
+              <td>
+                <strong>{cartItem.title}</strong>
+                <span>{cartItem.price}</span>
+              </td>
+              <td>
+                <div>
+                  <button
+                    type="button"
+                    data-testid="decrement-product"
+                  disabled={cartItem.amount <= 1}
+                  onClick={() => handleProductDecrement(cartItem)}
+                  >
+                    <MdRemoveCircleOutline size={20} />
+                  </button>
+                  <input
+                    type="text"
+                    data-testid="product-amount"
+                    readOnly
+                    value={cartItem.amount}
+                  />
+                  <button
+                    type="button"
+                    data-testid="increment-product"
+                    onClick={() => handleProductIncrement(cartItem)}
+                  >
+                    <MdAddCircleOutline size={20} />
+                  </button>
+                </div>
+              </td>
+              <td>
+                <strong>R$ 359,80</strong>
+              </td>
+              <td>
                 <button
                   type="button"
-                  data-testid="decrement-product"
-                // disabled={product.amount <= 1}
-                // onClick={() => handleProductDecrement()}
+                  data-testid="remove-product"
+                // onClick={() => handleRemoveProduct(product.id)}
                 >
-                  <MdRemoveCircleOutline size={20} />
+                  <MdDelete size={20} />
                 </button>
-                <input
-                  type="text"
-                  data-testid="product-amount"
-                  readOnly
-                  value={2}
-                />
-                <button
-                  type="button"
-                  data-testid="increment-product"
-                // onClick={() => handleProductIncrement()}
-                >
-                  <MdAddCircleOutline size={20} />
-                </button>
-              </div>
-            </td>
-            <td>
-              <strong>R$ 359,80</strong>
-            </td>
-            <td>
-              <button
-                type="button"
-                data-testid="remove-product"
-              // onClick={() => handleRemoveProduct(product.id)}
-              >
-                <MdDelete size={20} />
-              </button>
-            </td>
-          </tr>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </ProductTable>
 
