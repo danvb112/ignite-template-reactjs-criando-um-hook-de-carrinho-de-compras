@@ -11,6 +11,7 @@ interface Product {
   title: string;
   price: number;
   image: string;
+  amount?: number;
 }
 
 interface ProductFormatted extends Product {
@@ -26,9 +27,11 @@ const Home = (): JSX.Element => {
 
   const { addProduct, cart } = useCart();
 
-  // const cartItemsAmount = cart.reduce((sumAmount, product) => {
-  //   // TODO
-  // }, {} as CartItemsAmount)
+  // const cartItemsAmount = cart.map(cartItem => {
+  //   return {
+      
+  //   }
+  // });
 
   useEffect(() => {
     async function loadProducts() {
@@ -43,7 +46,6 @@ const Home = (): JSX.Element => {
   function handleAddProduct(id: number) {
     addProduct(id);
   }
-
 
   return (
     <ProductList>
