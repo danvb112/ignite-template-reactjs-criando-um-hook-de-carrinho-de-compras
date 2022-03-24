@@ -1,3 +1,4 @@
+import { error } from 'console';
 import React from 'react';
 import {
   MdDelete,
@@ -75,16 +76,22 @@ const Cart = (): JSX.Element => {
   }
 
   function handleRemoveProduct(productId: number) {
-    const updatedCart = [...cart];
-
-    const newCart: any = updatedCart.map(cartItem => {
-      if(cartItem.id !== productId) {
-        return cartItem
+    try {
+      const updatedCart = [...cart];
+      const productIndex = updatedCart.findIndex(product => product.id === productId);
+  
+      if(productIndex >= 0) {
+        updatedCart.splice(productIndex, 1);
+        setCart(updatedCart);
+        localStorage.setItem('@RocketShoes:cart', JSON.stringify(updatedCart))
+      }else {
+        throw Error();
       }
-    })
+    } catch {
+      toast.error('Erro na remoção do produto')
+    }
 
-    setCart(newCart);
-    localStorage.setItem('@RocketShoes:cart', JSON.stringify(newCart));
+
   }
 
   return (
@@ -141,7 +148,7 @@ const Cart = (): JSX.Element => {
                 <button
                   type="button"
                   data-testid="remove-product"
-                // onClick={() => handleRemoveProduct(product.id)}
+                  onClick={() => handleRemoveProduct(cartItem.id)}
                 >
                   <MdDelete size={20} />
                 </button>
