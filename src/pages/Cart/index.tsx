@@ -9,7 +9,7 @@ import { useCart } from '../../hooks/useCart';
 import { api } from '../../services/api';
 
 // import { useCart } from '../../hooks/useCart';
-// import { formatPrice } from '../../util/format';
+import { formatPrice } from '../../util/format';
 import { Container, ProductTable, Total } from './styles';
 
 interface Product {
@@ -107,7 +107,7 @@ const Cart = (): JSX.Element => {
               </td>
               <td>
                 <strong>{cartItem.title}</strong>
-                <span>{cartItem.price}</span>
+                <span>{formatPrice(cartItem.price)}</span>
               </td>
               <td>
                 <div>
