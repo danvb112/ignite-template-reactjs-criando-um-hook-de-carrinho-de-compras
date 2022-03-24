@@ -76,22 +76,7 @@ const Cart = (): JSX.Element => {
   }
 
   function handleRemoveProduct(productId: number) {
-    try {
-      const updatedCart = [...cart];
-      const productIndex = updatedCart.findIndex(product => product.id === productId);
-  
-      if(productIndex >= 0) {
-        updatedCart.splice(productIndex, 1);
-        setCart(updatedCart);
-        localStorage.setItem('@RocketShoes:cart', JSON.stringify(updatedCart))
-      }else {
-        throw Error();
-      }
-    } catch {
-      toast.error('Erro na remoção do produto')
-    }
-
-
+    removeProduct(productId);
   }
 
   return (
