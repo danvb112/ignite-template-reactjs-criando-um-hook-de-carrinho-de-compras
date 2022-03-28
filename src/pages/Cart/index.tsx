@@ -1,15 +1,11 @@
-import { error } from 'console';
 import React from 'react';
 import {
   MdDelete,
   MdAddCircleOutline,
   MdRemoveCircleOutline,
 } from 'react-icons/md';
-import { toast } from 'react-toastify';
 import { useCart } from '../../hooks/useCart';
-import { api } from '../../services/api';
 
-// import { useCart } from '../../hooks/useCart';
 import { formatPrice } from '../../util/format';
 import { Container, ProductTable, Total } from './styles';
 
@@ -22,57 +18,27 @@ interface Product {
 }
 
 const Cart = (): JSX.Element => {
-  const { cart, setCart ,removeProduct, updateProductAmount } = useCart();
+  const { cart, removeProduct, updateProductAmount } = useCart();
 
-  // const cartFormatted = cart.map(product => ({
-  //   // TODO
-  // }))
-  // const total =
-  //   formatPrice(
-  //     cart.reduce((sumTotal, product) => {
-  //       // TODO
-  //     }, 0)
-  //   )
+  const cartFormatted = cart.map(product => ({
+    ...product,
+    priceFormated: formatPrice(product.price),
+    subTotal: formatPrice(product.price * product.amount)
+  }))
+
+  const total =
+    formatPrice(
+      cart.reduce((sumTotal, product) => {
+        return sumTotal + product.price * product.amount
+      }, 0)
+    )
 
   async function handleProductIncrement(product: Product) {
-    const updatedCart = [...cart];
-
-    const incrementingProduct = updatedCart.find(cartItem => cartItem.id === product.id);
-
-    const stock = await api.get(`/stock/${product.id}`);
-
-    const stockAmount = stock.data.amount;
-    const currentAmount = incrementingProduct ? incrementingProduct.amount : 0;
-    const amount = currentAmount + 1;
-
-    if(amount > stockAmount) {
-      toast.error('Quantidade solicitada fora de estoque')
-      return;
-    }
-
-    if(incrementingProduct) {
-      incrementingProduct.amount = amount;
-    }
-
-    setCart(updatedCart);
-    localStorage.setItem('@RocketShoes:cart', JSON.stringify(updatedCart))
+    updateProductAmount({ productId: product.id, amount: product.amount + 1 });
   }
 
   function handleProductDecrement(product: Product) {
-    const updatedCart = [...cart];
-
-    const decrementingProduct = updatedCart.find(cartItem => cartItem.id === product.id);
-
-    const currentAmount = decrementingProduct ? decrementingProduct.amount : 0;
-    const amount = currentAmount - 1;
-
-    if(decrementingProduct) {
-      decrementingProduct.amount = amount
-    }
-
-    setCart(updatedCart);
-    localStorage.setItem('@RocketShoes:cart', JSON.stringify(updatedCart))
-
+    updateProductAmount({ productId: product.id, amount: product.amount - 1 });
   }
 
   function handleRemoveProduct(productId: number) {
@@ -92,22 +58,22 @@ const Cart = (): JSX.Element => {
           </tr>
         </thead>
         <tbody>
-          {cart.map(cartItem => (
+          {cartFormatted.map(cartItem => (
             <tr key={cartItem.id} data-testid="product">
               <td>
                 <img src={cartItem.image} alt="Tênis de Caminhada Leve Confortável" />
               </td>
               <td>
                 <strong>{cartItem.title}</strong>
-                <span>{formatPrice(cartItem.price)}</span>
+                <span>{cartItem.priceFormated}</span>
               </td>
               <td>
                 <div>
                   <button
                     type="button"
                     data-testid="decrement-product"
-                  disabled={cartItem.amount <= 1}
-                  onClick={() => handleProductDecrement(cartItem)}
+                    disabled={cartItem.amount <= 1}
+                    onClick={() => handleProductDecrement(cartItem)}
                   >
                     <MdRemoveCircleOutline size={20} />
                   </button>
@@ -127,7 +93,7 @@ const Cart = (): JSX.Element => {
                 </div>
               </td>
               <td>
-                <strong>R$ 359,80</strong>
+                <strong>{cartItem.subTotal}</strong>
               </td>
               <td>
                 <button
@@ -148,7 +114,7 @@ const Cart = (): JSX.Element => {
 
         <Total>
           <span>TOTAL</span>
-          <strong>R$ 359,80</strong>
+          <strong>{total}</strong>
         </Total>
       </footer>
     </Container>
